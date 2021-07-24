@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'productos',
+    'Usuarios',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -50,7 +52,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES':[
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        'rest_framework.authentication.TokenAuthentication'
+    ]
+}
 ROOT_URLCONF = 'EjemploAPI.urls'
 
 TEMPLATES = [
@@ -70,6 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'EjemploAPI.wsgi.application'
+AUTH_USER_MODEL = 'Usuarios.Usuario'
 
 
 # Database
