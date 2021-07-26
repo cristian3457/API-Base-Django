@@ -1,10 +1,12 @@
-from rest_framework import exceptions, status
+from rest_framework import status, views
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from Usuarios.models import Usuario
 from Usuarios.api.serializers import UsuarioListSerializer, UsuarioSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 @api_view(['GET','POST'])
 def usuario_api_view(request):
     # list
@@ -57,30 +59,18 @@ def usuario_detail_api_view(request,pk=None):
     
     return Response({'message':'No se ha encontrado un usuario con estos datos'},status = status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-def usuario_login(request):
-
-    if request.method == 'POST': 
-        authentication_classes  = False
-        usuario = request.data['usuario']
-        password = request.data['password']
-        user = authenticate(username=usuario, password=password)
-        if user is not None:
-            # login(request, user)
-            usuarios_serializer = UsuarioSerializer(user)
-            usuario = Usuario.objects.get(username=usuario)
-            token, _ = Token.objects.get_or_create(user=usuario)
-            return Response({"data":usuarios_serializer.data,"response":True,"token":token},status = status.HTTP_200_OK)
-        else:
-            return Response({"response":False},status = status.HTTP_401_UNAUTHORIZED)
-    
-from django.conf import settings
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        token = Token.objects.create(user=instance)
-        print('token:',token)
+class Login(APIView):
+    permission_classes = []
+    def post(self, request):
+        if request.method == 'POST': 
+            usuario = request.data['usuario']
+            password = request.data['password']
+            user = authenticate(username=usuario, password=password)
+            if user is not None:
+                # login(request, user)
+                usuarios_serializer = UsuarioSerializer(user)
+                usuario = Usuario.objects.get(username=usuario)
+                token, _ = Token.objects.get_or_create(user=usuario)
+                return Response({"data":usuarios_serializer.data,"response":True,"token":token.key},status = status.HTTP_200_OK)
+            else:
+                return Response({"response":False},status = status.HTTP_401_UNAUTHORIZED)

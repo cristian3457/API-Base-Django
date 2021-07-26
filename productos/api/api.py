@@ -1,4 +1,4 @@
-from rest_framework import exceptions, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from productos.models import Categoria, Producto, Subcategoria
@@ -41,7 +41,8 @@ def producto_detail_api_view(request,pk=None):
             productos_serializer = ProductoSerializer(producto,data = request.data)
             if productos_serializer.is_valid():
                 try:
-                    producto.img.delete(save=True)
+                    if request.data['img']:
+                        producto.img.delete(save=True)
                 except:
                     pass
                 productos_serializer.save()
@@ -92,7 +93,8 @@ def categoria_detail_api_view(request,pk=None):
             categorias_serializer = CategoriaSerializer(categoria,data = request.data)
             if categorias_serializer.is_valid():
                 try:
-                    categoria.img.delete(save=True)
+                    if request.data['img']:
+                        categoria.img.delete(save=True)
                 except:
                     pass
                 categorias_serializer.save()
@@ -143,7 +145,8 @@ def subcategoria_detail_api_view(request,pk=None):
             subcategorias_serializer = SubcategoriaSerializer(subcategoria,data = request.data)
             if subcategorias_serializer.is_valid():
                 try:
-                    subcategoria.img.delete(save=True)
+                    if request.data['img']:
+                        subcategoria.img.delete(save=True)
                 except:
                     pass
                 subcategorias_serializer.save()
