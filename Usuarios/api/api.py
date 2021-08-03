@@ -1,12 +1,16 @@
-from rest_framework import status, views
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from Usuarios.models import Usuario
 from Usuarios.api.serializers import UsuarioListSerializer, UsuarioSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from datetime import datetime
+from django.utils.timezone import make_aware
+
+from django.contrib.sessions.models import Session
+
 @api_view(['GET','POST'])
 def usuario_api_view(request):
     # list
@@ -59,6 +63,18 @@ def usuario_detail_api_view(request,pk=None):
     
     return Response({'message':'No se ha encontrado un usuario con estos datos'},status = status.HTTP_400_BAD_REQUEST)
 
+class ValidaToken(APIView):
+    permission_classes = []
+    def post(self, request):
+        token = request.data['token']
+        user = request.data['usuario']
+        usuario = Usuario.objects.get(username=user)
+        t = str(Token.objects.get(user = usuario))
+        if token == t:
+            return Response({"response":True},status = status.HTTP_200_OK)
+        else:
+            return Response({"response":False},status = status.HTTP_400_BAD_REQUEST)
+
 class Login(APIView):
     permission_classes = []
     def post(self, request):
@@ -70,7 +86,12 @@ class Login(APIView):
                 # login(request, user)
                 usuarios_serializer = UsuarioSerializer(user)
                 usuario = Usuario.objects.get(username=usuario)
-                token, _ = Token.objects.get_or_create(user=usuario)
-                return Response({"data":usuarios_serializer.data,"response":True,"token":token.key},status = status.HTTP_200_OK)
+                token, created = Token.objects.get_or_create(user=usuario)
+                if created:
+                    return Response({"data":usuarios_serializer.data,"response":True,"token":token.key},status = status.HTTP_200_OK)
+                else:
+                    token.delete()
+                    token = Token.objects.create(user = user)
+                    return Response({"data":usuarios_serializer.data,"response":True,"token":token.key},status = status.HTTP_200_OK)
             else:
                 return Response({"response":False},status = status.HTTP_401_UNAUTHORIZED)
